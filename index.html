@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf8"/>
+    </head>
+    <body>
+        <h1>Hi  
+            <span data-bind="firstname"></span>
+            <span data-bind="lastname"></span><i>!</i>
+        </h1>
+
+        <input type="text" placeholder="first name" data-bind="firstname"/>
+        <input type="text" placeholder="last name" data-bind="lastname"/>
+        <span data-bind="age"></span>
+
+        <script>
+
+            // Databinding Model=>View
+            const vm =  new Proxy(JSON.parse(localStorage.vm||'{}'),{
+                set: function(obj, prop, value){
+                    obj[prop] = value;
+                    this.refresh(obj);
+                    return true;
+                },
+                deleteProperty: function(obj, prop){
+                    if (prop in obj) {
+                        console.log(delete obj[prop]);
+                        this.refresh(obj);
+                        return true;
+                    }
+                    else return false;
+                },
+                refresh:(obj, prop)=>{
+
+                    localStorage.vm = JSON.stringify(obj);
+                                            
+                    for(p of [...Object.keys(obj),prop]){
+                        document.querySelectorAll(`*:not(input)[data-bind="${p}"]`).forEach(el=>{
+                            el.innerText = obj[p]||'';
+                        });
+                        document.querySelectorAll(`input[data-bind="${p}"]`).forEach(el=>{
+                            el.value = obj[p]||'';
+                        });
+                    };
+                }
+            });
+            
+            // Databinding View=>Model
+            document.querySelectorAll('input[data-bind]').forEach(elem=>{
+                elem.addEventListener('input',ev=>{
+                    vm[elem.dataset.bind] = elem.value;
+                });
+            });
+
+            // just to trigger the initial refresh;
+            vm.__proto__=vm.__proto__;
+
+        </script>
+    </body>
+
+    </html>
